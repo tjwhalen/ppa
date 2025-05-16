@@ -30,7 +30,10 @@ svg.diagram [stroke="white"], svg.diagram [stroke^="#fff"] {
 	 stroke: var(--bg);
 }
 
-/* expect a problem with third element, skipping */
+/* expect a problem with third element, syntax problem with nesting? */
+ svg.diagram [fill="black"], svg.diagram [fill^="#000"], svg.diagram :not([fill]) {
+	 fill: var(--text);
+}
 
  svg.diagram [fill="white"], svg.diagram [fill^="#fff"] {
 	 fill: var(--bg);
