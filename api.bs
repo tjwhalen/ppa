@@ -29,6 +29,12 @@ svg.diagram [stroke="black"], svg.diagram [stroke^="#000"] {
 svg.diagram [stroke="white"], svg.diagram [stroke^="#fff"] {
 	 stroke: var(--bg);
 }
+
+/* expect a problem with third element, skipping */
+
+ svg.diagram [fill="white"], svg.diagram [fill^="#fff"] {
+	 fill: var(--bg);
+}
 </style>
 
 
