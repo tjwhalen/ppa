@@ -22,6 +22,11 @@ Level: None
 
 <style>
 /* dark mode haxx for diagrams - unnested version */
+
+svg.diagram [stroke="black"], svg.diagram [stroke^="#000"] {
+	 stroke: var(--text);
+}
+
 </style>
 
 
