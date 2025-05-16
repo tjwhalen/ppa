@@ -26,7 +26,9 @@ Level: None
 svg.diagram [stroke="black"], svg.diagram [stroke^="#000"] {
 	 stroke: var(--text);
 }
-
+svg.diagram [stroke="white"], svg.diagram [stroke^="#fff"] {
+	 stroke: var(--bg);
+}
 </style>
 
 
