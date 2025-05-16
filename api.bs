@@ -19,21 +19,9 @@ Org: W3C
 Status: ED
 Level: None
 </pre>
+
 <style>
 /* dark mode haxx for diagrams - unnested version */
-
-svg.diagram [stroke="black"], svg.diagram [stroke^="#000"] {
-	 stroke: var(--text);
-}
- svg.diagram [stroke="white"], svg.diagram [stroke^="#fff"] {
-	 stroke: var(--bg);
-}
- svg.diagram [fill="black"], svg.diagram [fill^="#000"], svg.diagram :not([fill]) {
-	 fill: var(--text);
-}
- svg.diagram [fill="white"], svg.diagram [fill^="#fff"] {
-	 fill: var(--bg);
-}
 </style>
 
 
