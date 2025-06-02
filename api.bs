@@ -21,21 +21,19 @@ Level: None
 </pre>
 
 <style>
-/* dark mode haxx for diagrams - unnested version */
-
-svg.diagram [stroke="black"], svg.diagram [stroke^="#000"] {
-	 stroke: var(--text);
+/* dark mode haxx for diagrams
+   No nesting, thanks to https://github.com/validator/validator/issues/1820 */
+svg.diagram :is([stroke="black"], [stroke^="#000"]) {
+  stroke: var(--text);
 }
-svg.diagram [stroke="white"], svg.diagram [stroke^="#fff"] {
-	 stroke: var(--bg);
+svg.diagram :is([stroke="white"], [stroke^="#fff"]) {
+  stroke: var(--bg);
 }
-
- svg.diagram [fill="black"], svg.diagram [fill^="#000"], svg.diagram :not([fill]) {
-	 fill: var(--text);
+svg.diagram :is([fill="black"], [fill^="#000"], :not([fill])) {
+  fill: var(--text);
 }
-
- svg.diagram [fill="white"], svg.diagram [fill^="#fff"] {
-	 fill: var(--bg);
+svg.diagram :is([fill="white"], [fill^="#fff"]) {
+  fill: var(--bg);
 }
 </style>
 
@@ -437,7 +435,7 @@ Three types of sites are recognized:
     at the time that {{PrivateAttribution/measureConversion()}} is invoked.
 
 *   An <dfn>intermediary site</dfn> is a [=site=]
-    that calls the API from any cross-site frame, such an [=iframe=].
+    that calls the API from any cross-site frame, such as an [=iframe=].
     The [=intermediary site=] is derived from the [=origin=]
     of the [=relevant settings object=]
     at the time that either {{PrivateAttribution/saveImpression()}}
@@ -630,7 +628,6 @@ The arguments to <a method for=PrivateAttribution>saveImpression()</a> are as fo
   <dd>
     A positive "time to live" (in days) after which the [=impression=] can no
     longer receive attribution.
-    If not specified, the default is 30 days.
     The [=user agent=] should impose an upper limit on the lifetime,
     and silently reduce the value specified here if it exceeds that limit.
   </dd>
@@ -862,7 +859,7 @@ The [=impression store=] is a [=set=] of [=impression|impressions=]:
     or `undefined` if the API was invoked by the [=impression site=].
 <dfn>Conversion Sites</dfn>: The [=set=] of [=conversion sites=] that were passed to <a>saveImpression()</a>.
 <dfn>Timestamp</dfn>: The time at which <a>saveImpression()</a> was called.
-<dfn>Lifetime</dfn>: The number of days an [=/impression=] remains eligible for attribution, either from the call to <a>saveImpression()</a>, or a [=/user agent=]-defined limit.
+<dfn>Lifetime</dfn>: The [=duration=] an [=/impression=] remains eligible for attribution, either from the call to <a>saveImpression()</a>, or a [=/user agent=]-defined limit.
 <dfn>Histogram Index</dfn>: The histogram index passed to <a>saveImpression()</a>.
 </pre>
 </div>
@@ -1112,9 +1109,9 @@ to indicate a "zero" or reference [=epoch=].
 
 The algorithms in this specification all use concrete [=epoch indices=],
 rather than the more abstract [=epoch=].
-[=moment|Points in time=] are translalated to an [=epoch index=]
+[=moment|Points in time=] are translated to an [=epoch index=]
 for the corresponding [=epoch=]
-using the [=get the current epoch=] algoritm.
+using the [=get the current epoch=] algorithm.
 
 <div algorithm>
 To <dfn>get the current epoch</dfn>
@@ -1225,8 +1222,9 @@ returning an [=epoch index=]:
 <div algorithm>
 The <dfn method for=PrivateAttribution>saveImpression(|options|)</dfn> method steps are:
 
-<!-- TODO: Check the {{PermissionPolicy/save-impression}} policy. -->
-
+1.  If [=this=]'s [=relevant global object=]'s [=associated Document=] is not
+    [=allowed to use=] the [=policy-controlled feature=] named
+    "{{PermissionPolicy/save-impression}}", throw a {{"NotAllowedError"}} {{DOMException}}.
 1.  Let |settings| be [=this=]'s [=relevant settings object=].
 1.  Collect the implicit API inputs from |settings|:
     1.  Let |timestamp| be |settings|' [=environment settings object/current wall time=].
@@ -1243,23 +1241,30 @@ The <dfn method for=PrivateAttribution>saveImpression(|options|)</dfn> method st
         throw a {{RangeError}}.
     1.  Clamp |options|.{{PrivateAttributionImpressionOptions/lifetimeDays}} to
         the [=user agent=]'s upper limit.
+    1.  If the [=list/size=] of
+        |options|.{{PrivateAttributionImpressionOptions/conversionSites}} is
+        greater than an [=implementation-defined=] maximum value, throw a {{RangeError}}.
     1.  Let |conversionSites| be the [=set=] that is the result
         of invoking [=parse a site=]
         for each value in |options|.{{PrivateAttributionImpressionOptions/conversionSites}}.
-    1.  If any result in |conversionSites| is failure, return {{SyntaxError}}.
+    1.  If any result in |conversionSites| is failure, throw a {{"SyntaxError"}} {{DOMException}}.
 1.  If the Private Attribution API is [[#opt-out|disabled]], return.
 1.  Construct |impression| as a [=impression|saved impression=] comprising:
-    *   [=impression/Match Value=] set to
-        |options|.{{PrivateAttributionImpressionOptions/matchValue}}.
-    *   [=impression/Impression Site=] set to |site|.
-    *   [=impression/Intermediary Site=] set to |intermediarySite|.
-    *   [=impression/Conversion Sites=] set to |conversionSites|.
-    *   [=impression/Timestamp=] set to |timestamp|.
-    *   [=impression/Lifetime=] set to
-        |options|.{{PrivateAttributionImpressionOptions/lifetimeDays}},
-        multiplied by a [=duration=] of one day.
-    *   [=impression/Histogram Index=] set to
-        |options|.{{PrivateAttributionImpressionOptions/histogramIndex}}.
+    :   [=impression/Match Value=]
+    ::  |options|.{{PrivateAttributionImpressionOptions/matchValue}}
+    :   [=impression/Impression Site=]
+    ::  |site|
+    :   [=impression/Intermediary Site=]
+    ::  |intermediarySite|
+    :   [=impression/Conversion Sites=]
+    ::  |conversionSites|
+    :   [=impression/Timestamp=]
+    ::  |timestamp|
+    :   [=impression/Lifetime=]
+    ::  |options|.{{PrivateAttributionImpressionOptions/lifetimeDays}},
+        multiplied by a [=duration=] of one day
+    :   [=impression/Histogram Index=]
+    ::  |options|.{{PrivateAttributionImpressionOptions/histogramIndex}}
 1.  Save |impression| to the [=impression store=].
 
 <p class=advisement><a method for=PrivateAttribution>saveImpression()</a>
@@ -1277,9 +1282,11 @@ asynchronously, queuing work on the <dfn>Private Attribution [=task source=]</df
 <div algorithm>
 The <dfn method for=PrivateAttribution>measureConversion(|options|)</dfn> method steps are:
 
-<!-- TODO: Check the {{PermissionPolicy/measure-conversion}} policy. -->
-
 1.  Let |realm| be [=this=]'s [=relevant realm=].
+1.  If [=this=]'s [=relevant global object=]'s [=associated Document=] is not
+    [=allowed to use=] the [=policy-controlled feature=] named
+    "{{PermissionPolicy/measure-conversion}}", return [=a promise rejected with=]
+    a {{"NotAllowedError"}} {{DOMException}} in |realm|.
 1.  Let |settings| be [=this=]'s [=relevant settings object=].
 1.  Collect the implicit API inputs from |settings|:
     1.  Let |now| be |settings|' [=environment settings object/current wall time=].
@@ -1302,14 +1309,14 @@ The <dfn method for=PrivateAttribution>measureConversion(|options|)</dfn> method
     1.  If |options|.{{PrivateAttributionConversionOptions/histogramSize}}
         is 0 or greater than an [=implementation-defined=] maximum value,
         return [=a promise rejected with=] a {{RangeError}} in |realm|.
-    1.  Switch on the value of <a dict-member for=PrivateAttributionConversionOptions>logic</a>:
+    1.  Switch on the value of |options|.{{PrivateAttributionConversionOptions/logic}}:
         <dl class="switch">
             :   <a enum-value for=PrivateAttributionLogic>"last-touch"</a>
             ::  Perform the following steps:
-                1.  If <a dict-member for=PrivateAttributionConversionOptions>value</a> is 0,
+                1.  If |options|.{{PrivateAttributionConversionOptions/value}} is 0,
                     return [=a promise rejected with=] a {{RangeError}} in |realm|.
-                1.  If <a dict-member for=PrivateAttributionConversionOptions>value</a>
-                    is greater than <a dict-member for=PrivateAttributionConversionOptions>maxValue</a>,
+                1.  If |options|.{{PrivateAttributionConversionOptions/value}}
+                    is greater than |options|.{{PrivateAttributionConversionOptions/maxValue}},
                     return [=a promise rejected with=] a {{RangeError}} in |realm|.
         </dl>
     1. If |options|.{{PrivateAttributionConversionOptions/lookbackDays}} is 0,
@@ -1323,8 +1330,11 @@ The <dfn method for=PrivateAttribution>measureConversion(|options|)</dfn> method
          |topLevelSite|, and |now|.
      1.  Let |encryptedReport| be the result of encrypting |report|.
      <!-- TODO: Define "encrypting" -->
+     1.  Let |result| be a {{PrivateAttributionConversionResult}} with the following items:
+          : {{PrivateAttributionConversionResult/report}}
+          :: |encryptedReport|
      1.  [=Queue a task=] on the [=Private Attribution task source=] to
-         [=resolve=] |promise| with |encryptedReport|.
+         [=resolve=] |promise| with |result|.
 1. Return |promise|.
 
 </div>
@@ -1408,6 +1418,9 @@ To perform <dfn>common matching logic</dfn>, given
 
 1.  [=set/iterate|For each=] |impression| in the [=impression store=] for the |epoch|:
 <!-- TODO: Clarify "for the |epoch|" -->
+
+    1.  If |now| is after |impression|'s [=impression/timestamp=] plus |impression|'s
+        [=impression/lifetime=], [=iteration/continue=].
 
     1.  If |now| - |lookbackDays| is after |impression|'s [=impression/timestamp=],
         [=iteration/continue=].
@@ -1495,30 +1508,30 @@ the {{PrivateAttributionImpressionOptions}} dictionary passed to
 <a method for=PrivateAttribution>saveImpression()</a>.
 
 <dl dfn-for=save-impression>
-  <dt><code>conversion-sites</code></dt>
+  <dt><dfn noexport><code>conversion-sites</code></dfn></dt>
   <dd>
     Value of <a dict-member for=PrivateAttributionImpressionOptions>conversionSites</a>,
-    a [=structured header/inner list=] containing [=structured header/string|strings=].
+    an [=structured header/inner list=] containing [=structured header/string|strings=].
     Each string value includes a domain name using A-labels only;
     [[RFC5890|Internationalized Domain Names]] therefore need to use [[RFC3492|punycode]].
     This key is optional. If not supplied, an empty set is saved for [=impression/Conversion Sites=].
   </dd>
-  <dt><code>histogram-index</code></dt>
+  <dt><dfn noexport><code>histogram-index</code></dfn></dt>
   <dd>
     Value of <a dict-member for=PrivateAttributionImpressionOptions>histogramIndex</a>,
     a non-negative [=structured header/integer=]. This key is required.
   </dd>
-  <dt><code>match-value</code></dt>
+  <dt><dfn noexport><code>match-value</code></dfn></dt>
   <dd>
     Value of <a dict-member for=PrivateAttributionImpressionOptions>matchValue</a>,
     a non-negative [=structured header/integer=]. This key is optional.
     If not supplied, a value of 0 is saved for [=impression/Match Value=].
   </dd>
-  <dt><code>lifetime-days</code></dt>
+  <dt><dfn noexport><code>lifetime-days</code></dfn></dt>
   <dd>
     Value of <a dict-member for=PrivateAttributionImpressionOptions>lifetimeDays</a>,
     a positive [=structured header/integer=]. This key is optional.
-    If not supplied, an [=implementation-defined=] value is saved for [=impression/Lifetime=].
+    If not supplied, 30 days is saved for [=impression/Lifetime=].
   </dd>
 </dl>
 
